@@ -1,0 +1,42 @@
+application:
+    build: .
+    dockerfile: ./opt/docker/development/Dockerfile
+    working_dir: /var/www
+    ports:
+        - 10000:80
+    volumes:
+        - ./opt/nginx/development/default.conf:/etc/nginx/conf.d/default.conf
+        - ./opt/php/development:/usr/local/etc/php/conf.d
+        - ./:/var/www
+    links:
+      - database:database
+      - elasticsearch:elasticsearch
+      - memcached:memcached
+    volumes_from:
+      - symfony_cache_and_logs
+
+symfony_cache_and_logs:
+  image: busybox
+  volumes:
+    - /var/www/app/cache
+    - /var/www/app/log
+
+database:
+  image: postgres
+  environment:
+    - POSTGRES_PASSWORD=postgres
+
+elasticsearch:
+  image: elasticsearch
+  command: -Des.node.name="PrimaryNode" -Des.network.host=::0
+
+memcached:
+  image: memcached
+
+redis:
+  image: redis
+
+#beanstalkd:
+#  image: michaelcontento/beanstalkd
+#  links:
+#    - elasticsearch:elasticsearch
