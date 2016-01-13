@@ -15,10 +15,10 @@ foreach ($containers as $c) {
     if (strpos($imageName, ':') !== false) {
         list($imageName, $imageTag) = explode(":", $imageName);
     }
+    $imageTag = strtolower($imageTag);
 
     // Get the inspect info
     $inspectInfo = json_decode(shell_exec(sprintf('docker inspect %s', $containerId)), true);
-
     if($inspectInfo === false || empty($inspectInfo)) {
         continue;
     }
