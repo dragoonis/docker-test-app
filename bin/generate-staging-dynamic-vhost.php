@@ -5,7 +5,7 @@ $hostsPortMap = '';
 foreach($map as $branch => $portNum) {
     $host = sprintf($stagingHostFormat, $branch);
     $hostsPortMap .= <<<EOF
-        {$host} 5000;
+    {$host} 5000;
 EOF;
 }
 
