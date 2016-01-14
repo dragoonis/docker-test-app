@@ -2,7 +2,6 @@ application:
     build: .
     dockerfile: ./opt/docker/development/Dockerfile
     working_dir: /var/www
-    name: webapp
     ports:
         # The typical syntax for this is 10000:80, but we want docker to make a randomised port on the left side, so we make it blank.
         - 80

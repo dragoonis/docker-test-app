@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 $ret = shell_exec('docker ps --format "{{.ID}} {{.Image}}" | grep pplweb');
 $containers = explode("\n", $ret);
@@ -12,45 +13,22 @@ foreach ($containers as $c) {
 
     // Get Image Tag
     $imageTag = $imageName;
-    if (strpos($imageName, ':') !== false) {
-        list($imageName, $imageTag) = explode(":", $imageName);
+    if ( ($pos = strrpos($imageName, ':')) !== false ) {
+        $imageTag = substr($imageName, ($pos + 1));
     }
     $imageTag = strtolower($imageTag);
 
-    // Get the inspect info
-    $inspectInfo = json_decode(shell_exec(sprintf('docker inspect %s', $containerId)), true);
-    if($inspectInfo === false || empty($inspectInfo)) {
+    // Get the host port
+    $hostPort = trim(shell_exec(sprintf(
+        'docker inspect --format "{{range .NetworkSettings.Ports}}{{range .}}{{.HostPort}}{{end}}{{end}}" %s',
+        $containerId
+    )));
+
+    if(empty($hostPort) || !is_numeric($hostPort)) {
         continue;
     }
 
-    $inspectInfo = current($inspectInfo);
-
-    if(!isset($inspectInfo['NetworkSettings']['Ports']) || empty($inspectInfo['NetworkSettings']['Ports'])) {
-        continue;
-    }
-
-    // Get all the port information
-    $portsEntries = $inspectInfo['NetworkSettings']['Ports'];
-    $foundPort = false;
-    foreach($portsEntries as $ports) {
-        if($ports === null || empty($ports)) {
-            continue;
-        }
-
-        foreach($ports as $port) {
-            if(isset($port['HostPort']) && is_numeric($port['HostPort'])) {
-                $foundPort = $port['HostPort'];
-            }
-            break 2; // Pop out 2 loops
-        }
-    }
-
-
-    if($foundPort === false) {
-        continue;
-    }
-
-    $clean[$imageTag] = $foundPort;
+    $clean[$imageTag] = $hostPort;
 }
 $output = json_encode($clean);
 echo $output;
